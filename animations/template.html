@@ -1,0 +1,466 @@
+<title>Sampling the Four-Sphere</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an instrument panel. Left, the field on 2-spheres cut out of S^4
+   (one large, a row of latitude cuts below). Right, three strip charts that
+   fill in as the chain runs. Transport bar underneath. */
+:root{
+  --bg:#f5f6f8; --panel:#ffffff; --ink:#15202c; --muted:#5d6b7a; --rule:#d5dbe2;
+  --data:#0b6e8f; --data-soft:rgba(11,110,143,.16); --mark:#b85c0a; --ref:#15202c;
+  --serif:"STIX Two Text","STIX Two Math",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c131c; --panel:#121b27; --ink:#e7edf4; --muted:#8fa0b3; --rule:#263445;
+  --data:#62c6e4; --data-soft:rgba(98,198,228,.18); --mark:#f0a84a; --ref:#e7edf4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c131c; --panel:#121b27; --ink:#e7edf4; --muted:#8fa0b3; --rule:#263445;
+  --data:#62c6e4; --data-soft:rgba(98,198,228,.18); --mark:#f0a84a; --ref:#e7edf4; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:16px;line-height:1.4}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:18px;padding-block:12px 16px;display:flex;flex-direction:column;gap:10px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 18px}
+h1{font-size:1.35rem;font-weight:600;margin:0;letter-spacing:-.005em}
+.sub{color:var(--muted);margin:0;font-size:.92rem;min-width:0}
+.params{font-family:var(--mono);font-size:.7rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:2px 14px;margin:0;padding:0;list-style:none}
+.params b{color:var(--ink);font-weight:500}
+.grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:stretch}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:12px;min-width:0}
+.left{display:flex;flex-direction:column;gap:8px;--s:clamp(190px,min(calc(100vh - 385px),calc(36vw - 70px)),420px);width:calc(var(--s) + 74px)}
+.cap{font-size:.8rem;line-height:1.3;color:var(--muted);margin:0}
+.cap i{color:var(--ink)}
+.bigrow{display:flex;gap:8px;align-items:center;justify-content:center}
+#big{width:var(--s);height:var(--s);flex:none;touch-action:none;cursor:grab;display:block}
+#big:active{cursor:grabbing}
+.cbar{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--mono);font-size:.66rem;color:var(--muted)}
+#cbar{width:10px;height:calc(var(--s)*.45);border:1px solid var(--rule);display:block}
+.tomo{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;align-items:end}
+.tomo figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:1px}
+.tomo canvas{width:100%;max-width:84px;aspect-ratio:1;display:block}
+.tomo figcaption{font-family:var(--mono);font-size:.64rem;color:var(--muted);text-align:center;white-space:nowrap}
+.tomo figure.eq figcaption{color:var(--ink)}
+.right{display:flex;flex-direction:column;gap:4px}
+.right h2{font-size:.68rem;font-family:var(--mono);font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 0}
+.right h2:first-child{margin-top:0}
+.cw{position:relative;flex:1 1 0;min-height:150px}
+.cw canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.legend{font-family:var(--mono);font-size:.66rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:1px 14px;margin:0}
+.legend span::before{content:"";display:inline-block;width:16px;height:0;border-top:2px solid var(--data);vertical-align:middle;margin-right:5px}
+.legend span.ref::before{border-top:1.5px dashed var(--ref)}
+.legend span.band::before{border-top:7px solid var(--data-soft)}
+.legend span.ring::before{width:7px;height:7px;border:1.5px solid var(--data);border-radius:50%}
+.legend span.pt::before{width:7px;height:7px;border:0;border-radius:50%;background:var(--mark)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-family:var(--mono);font-size:.74rem}
+button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--rule);border-radius:3px;padding:4px 10px;cursor:pointer}
+button:hover,select:hover{border-color:var(--muted)}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--data);outline-offset:2px}
+#play{min-width:76px;background:var(--ink);color:var(--panel);border-color:var(--ink)}
+label{display:flex;align-items:center;gap:6px;color:var(--muted)}
+input[type=range]{accent-color:var(--data)}
+#seek{flex:1 1 200px;min-width:120px}
+.status{display:flex;flex-wrap:wrap;gap:2px 16px;font-family:var(--mono);font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:8px}
+.status b{color:var(--ink);font-weight:500}
+#phase{display:inline-block;min-width:21ch}
+#phase.rej{color:var(--mark)}
+details{font-size:.88rem;color:var(--muted)}
+summary{cursor:pointer;font-family:var(--mono);font-size:.74rem;color:var(--ink)}
+.notes{columns:2 340px;column-gap:28px;margin-top:8px}
+.notes p{margin:0 0 .6em;break-inside:avoid}
+.notes b{color:var(--ink);font-weight:600}
+@media (max-width:680px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .left{width:auto;--s:min(72vw,360px)}
+  .cw{flex:none;height:200px}
+}
+@media (max-width:440px){#w-run{height:520px}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Sampling the four-sphere</h1>
+    <p class="sub">Hybrid Monte Carlo for <i>λφ</i><sup>4</sup> theory on Euclidean de Sitter space, <i>S</i><sup>4</sup>. Every frame is a field configuration from the chain.</p>
+  </header>
+  <ul class="params" id="params"></ul>
+
+  <div class="grid">
+    <section class="panel left" aria-label="Field configuration">
+      <div class="bigrow">
+        <canvas id="big" aria-label="Field on the equatorial two-sphere. Drag to rotate."></canvas>
+        <div class="cbar"><span id="cmax"></span><canvas id="cbar"></canvas><span id="cmin"></span><span><i>φ</i>/<i>H</i></span></div>
+      </div>
+      <div class="tomo" id="tomo"></div>
+      <p class="cap">Above: the field on the equatorial 2-sphere of <i>S</i><sup>4</sup> (drag to rotate). Below it: the same configuration on 2-spheres at latitudes <i>χ</i>, drawn to scale with radius <i>R</i> sin <i>χ</i>.</p>
+    </section>
+
+    <section class="panel right" aria-label="Measurements">
+      <h2>Zero mode φ̄ along the chain</h2>
+      <div class="cw" id="w-trace"><canvas id="trace"></canvas></div>
+      <p class="legend"><span>chain</span><span class="band">histogram of visited values</span><span class="ref">Starobinsky–Yokoyama distribution</span></p>
+      <h2>Running estimates after N configurations</h2>
+      <div class="cw" id="w-run"><canvas id="run"></canvas></div>
+      <p class="legend"><span>running estimate</span><span class="pt">its current value</span><span class="ref">prediction</span><span class="ring">prediction per shell</span><span class="band">68% and 95% of independent chains</span></p>
+    </section>
+  </div>
+
+  <div class="panel">
+    <div class="bar">
+      <button id="play" type="button">Pause</button>
+      <button id="restart" type="button">Restart</button>
+      <input id="seek" type="range" min="0" max="100" value="0" step="1" aria-label="Position in the chain">
+      <label for="tempo">Tempo
+        <select id="tempo">
+          <option value="auto">auto (slow, then fast)</option>
+          <option value="1">1 trajectory / s</option>
+          <option value="4">4 / s</option>
+          <option value="20">20 / s</option>
+          <option value="100">100 / s</option>
+        </select></label>
+      <label for="cmap">Colours
+        <select id="cmap">
+          <option value="turbo">rainbow</option>
+          <option value="rdbu">red–blue</option>
+        </select></label>
+    </div>
+    <div class="status">
+      <span>trajectory <b id="s-k">0</b> / <span id="s-K"></span></span>
+      <span id="phase">—</span>
+      <span>accepted <b id="s-acc">—</b></span>
+      <span>φ̄ = <b id="s-pb">—</b></span>
+      <span>⟨φ̄²⟩ = <b id="s-var">—</b></span>
+      <span>U = <b id="s-u">—</b></span>
+    </div>
+  </div>
+
+  <details><summary>About this animation</summary><div class="notes" id="notes"></div></details>
+</div>
+
+<script>
+(function(){
+"use strict";
+const D = __DATA__;
+const M = D.meta, K = M.K, L = M.n_max, NS = (L+1)*(L+1), NSL = M.chi_deg.length;
+
+/* ---------- decode ---------- */
+function bytes(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+const f32=s=>new Float32Array(bytes(s).buffer);
+const Q=new Int8Array(bytes(D.slices).buffer);          // (K+1, NSL, NS)
+const pbPre=f32(D.pb_pre), pbPost=f32(D.pb_post), Tt=f32(D.T), ACC=bytes(D.acc);
+const SHELL=f32(D.shell);                                // (K, L+1)
+const PLM=f32(D.plm);                                    // (nt, NS)
+const NT=M.nt;
+const dq=new Float32Array(NS);                           // dequantisation per S^2 index
+for(let l=0,i=0;l<=L;l++)for(let m=-l;m<=l;m++,i++)dq[i]=D.scales[l]/127;
+
+/* running statistics, index k = number of configurations used (1..K) */
+const runVar=new Float32Array(K+1), runU=new Float32Array(K+1), runAcc=new Float32Array(K+1);
+const runShell=new Float32Array((K+1)*(L+1));
+(function(){let s2=0,s4=0,a=0;const cs=new Float64Array(L+1);
+  for(let k=1;k<=K;k++){const x=pbPost[k],x2=x*x;s2+=x2;s4+=x2*x2;a+=ACC[k];
+    const v=s2/k;runVar[k]=v;runU[k]=1-(s4/k)/(3*v*v);runAcc[k]=a/k;
+    for(let n=0;n<=L;n++){cs[n]+=SHELL[(k-1)*(L+1)+n];runShell[k*(L+1)+n]=cs[n]/k;}}
+})();
+
+/* ---------- colour maps ---------- */
+const LUT={};
+(function(){
+  // turbo, polynomial fit (Mikhailov 2019)
+  const t=new Uint8Array(768);
+  for(let i=0;i<256;i++){const x=i/255;
+    const r=0.13572138+x*(4.61539260+x*(-42.66032258+x*(132.13108234+x*(-152.94239396+x*59.28637943))));
+    const g=0.09140261+x*(2.19418839+x*(4.84296658+x*(-14.18503333+x*(4.27729857+x*2.82956604))));
+    const b=0.10667330+x*(12.64194608+x*(-60.58204836+x*(110.36276771+x*(-89.90310912+x*27.34824973))));
+    t[3*i]=255*Math.min(1,Math.max(0,r));t[3*i+1]=255*Math.min(1,Math.max(0,g));t[3*i+2]=255*Math.min(1,Math.max(0,b));}
+  LUT.turbo=t;
+  const stops=[[5,48,97],[33,102,172],[67,147,195],[146,197,222],[209,229,240],[247,247,247],[253,219,199],[244,165,130],[214,96,77],[178,24,43],[103,0,31]];
+  const r=new Uint8Array(768);
+  for(let i=0;i<256;i++){const x=i/255*(stops.length-1),j=Math.min(stops.length-2,Math.floor(x)),f=x-j;
+    for(let c=0;c<3;c++)r[3*i+c]=stops[j][c]*(1-f)+stops[j+1][c]*f;}
+  LUT.rdbu=r;
+})();
+let lut=LUT.turbo;
+
+/* ---------- spherical-harmonic synthesis on a (nt x np) texture ---------- */
+function makeSynth(nt,np_,step){
+  const cosT=new Float32Array(np_*(L+1)),sinT=new Float32Array(np_*(L+1));
+  for(let j=0;j<np_;j++)for(let m=0;m<=L;m++){cosT[j*(L+1)+m]=Math.cos(2*Math.PI*j*m/np_);sinT[j*(L+1)+m]=Math.sin(2*Math.PI*j*m/np_);}
+  const A=new Float32Array(L+1),B=new Float32Array(L+1);
+  return function(b,offset,tex){
+    for(let i=0;i<nt;i++){
+      const row=(i*step+(step>>1))*NS;        // PLM row; for step=2 take the upper of each pair
+      for(let m=0;m<=L;m++){let a=0,c=0;
+        for(let l=m;l<=L;l++){const ip=l*l+l+m;a+=b[ip]*PLM[row+ip];if(m){const im=l*l+l-m;c+=b[im]*PLM[row+im];}}
+        A[m]=a;B[m]=c;}
+      const o=i*np_;
+      for(let j=0;j<np_;j++){let v=offset+A[0];const t=j*(L+1);
+        for(let m=1;m<=L;m++)v+=A[m]*cosT[t+m]+B[m]*sinT[t+m];
+        tex[o+j]=v;}
+    }
+  };
+}
+
+/* ---------- a sphere drawn by per-pixel lookup into the texture ---------- */
+function Sphere(canvas,nt,np_,rel,step){
+  this.c=canvas;this.ctx=canvas.getContext("2d");this.nt=nt;this.np=np_;this.rel=rel;this.step=step;
+  this.tex=new Float32Array(nt*np_);this.synth=makeSynth(nt,np_,step);this.tilt=NaN;this.size=0;
+}
+Sphere.prototype.layout=function(tilt){
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const css=this.c.clientWidth||100,S=Math.max(40,Math.round(css*dpr));
+  if(S===this.size&&tilt===this.tilt)return;
+  this.size=S;this.tilt=tilt;this.c.width=S;this.c.height=S;
+  this.img=this.ctx.createImageData(S,S);
+  const R=(S/2-1.5)*this.rel,cx=S/2,cy=S/2,ct=Math.cos(tilt),st=Math.sin(tilt);
+  const idx=[],th=[],ph=[],sh=[],al=[],gl=[],sn=[];
+  const gw=1.1/R;                                   // graticule half-width, radians
+  for(let y=0;y<S;y++)for(let x=0;x<S;x++){
+    const u=(x+.5-cx)/R,v=-(y+.5-cy)/R,r2=u*u+v*v;
+    if(r2>=1.0)continue;
+    const z=Math.sqrt(1-r2);
+    const by=v*ct+z*st,bz=-v*st+z*ct,bx=u;
+    const theta=Math.acos(Math.max(-1,Math.min(1,by)));
+    idx.push(y*S+x);
+    // texture row coordinate; rows sit at (i+.5)*pi/nt for step 1; for step 2 at PLM row (2i+1)+.5
+    const rowpos=this.step===1?theta/Math.PI*this.nt-.5:(theta/Math.PI*NT-1.5)/2;
+    th.push(Math.max(0,Math.min(this.nt-1,rowpos)));
+    ph.push(Math.atan2(bx,bz));
+    sh.push(.62+.38*Math.pow(z,.8));
+    al.push(Math.min(1,(1-Math.sqrt(r2))*R));
+    const d30=Math.abs(((theta*6/Math.PI)%1+1.5)%1-.5)*Math.PI/6;
+    gl.push(Math.max(0,1-d30/gw));
+    sn.push(Math.sin(theta));
+  }
+  this.idx=Int32Array.from(idx);this.th=Float32Array.from(th);this.ph=Float32Array.from(ph);
+  this.sh=Float32Array.from(sh);this.al=Float32Array.from(al);this.gl=Float32Array.from(gl);this.sn=Float32Array.from(sn);
+  this.gw=gw;
+};
+Sphere.prototype.draw=function(yaw,vmax){
+  const d=this.img.data,tex=this.tex,nt=this.nt,np_=this.np,n=this.idx.length,gw=this.gw;
+  const k=np_/(2*Math.PI),inv=127.5/vmax,S6=6/Math.PI;
+  for(let i=0;i<n;i++){
+    let p=this.ph[i]+yaw;p-=Math.floor(p/(2*Math.PI))*2*Math.PI;
+    const fx=p*k,x0=Math.floor(fx)%np_,x1=(x0+1)%np_,ax=fx-Math.floor(fx);
+    const fy=this.th[i],y0=Math.floor(fy),y1=Math.min(nt-1,y0+1),ay=fy-y0;
+    const v=(tex[y0*np_+x0]*(1-ax)+tex[y0*np_+x1]*ax)*(1-ay)+(tex[y1*np_+x0]*(1-ax)+tex[y1*np_+x1]*ax)*ay;
+    let ci=(v*inv+127.5)|0;ci=ci<0?0:ci>255?255:ci;ci*=3;
+    // meridians every 30 degrees
+    const m=p*S6,dm=Math.abs(m-Math.round(m))*Math.PI/6*this.sn[i];
+    let g=this.gl[i];const g2=1-dm/gw;if(g2>g)g=g2;g*=.22;
+    const s=this.sh[i],o=this.idx[i]*4;
+    d[o]=(lut[ci]*(1-g)+255*g)*s;d[o+1]=(lut[ci+1]*(1-g)+255*g)*s;d[o+2]=(lut[ci+2]*(1-g)+255*g)*s;d[o+3]=255*this.al[i];
+  }
+  this.ctx.putImageData(this.img,0,0);
+};
+
+/* ---------- build spheres ---------- */
+const order=[1,2,0,3,4];                                 // chi = 30, 60, 90, 120, 150
+const big=new Sphere(document.getElementById("big"),NT,2*NT,1,1);
+const tomo=document.getElementById("tomo"),small=[];
+order.forEach(function(s){
+  const chi=M.chi_deg[s],fig=document.createElement("figure"),cv=document.createElement("canvas"),cap=document.createElement("figcaption");
+  if(chi===90)fig.className="eq";
+  cap.textContent="χ = "+chi.toFixed(0)+"°";
+  fig.appendChild(cv);fig.appendChild(cap);tomo.appendChild(fig);
+  small.push({s:s,sp:new Sphere(cv,NT/2,NT,Math.sin(chi*Math.PI/180),2)});
+});
+
+/* ---------- field at chain time t (continuous) ---------- */
+const coef=new Float32Array(NS);
+function fieldAt(s,k,u,flow){
+  // k: trajectory being executed (1..K), u in [0,1] progress; returns zero-mode offset, fills coef
+  const a=((k-1)*NSL+s)*NS,b=(k*NSL+s)*NS;
+  if(!flow||u>=1||!ACC[k]){
+    const src=(u>=1||!flow)?b:a;
+    for(let i=0;i<NS;i++)coef[i]=Q[src+i]*dq[i];
+  }else{
+    // free Hamiltonian flow joining the two stored configurations:
+    // every non-constant mode is a unit-frequency oscillator after preconditioning
+    const T=Tt[k],sT=Math.sin(T),wa=Math.sin(T*(1-u))/sT,wb=Math.sin(T*u)/sT;
+    for(let i=0;i<NS;i++)coef[i]=(Q[a+i]*wa+Q[b+i]*wb)*dq[i];
+  }
+}
+const FLOW_FRAC=.8;
+function zeroModeAt(k,x,flow){
+  if(!flow)return pbPost[k];
+  if(x<FLOW_FRAC){const u=x/FLOW_FRAC;return pbPost[k-1]+(pbPre[k]-pbPost[k-1])*u;}
+  const g=(x-FLOW_FRAC)/(1-FLOW_FRAC),e=g*g*(3-2*g);return pbPre[k]+(pbPost[k]-pbPre[k])*e;
+}
+
+/* ---------- plots ---------- */
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+let C={};
+function readColours(){C={ink:css("--ink"),muted:css("--muted"),rule:css("--rule"),data:css("--data"),soft:css("--data-soft"),mark:css("--mark"),ref:css("--ref"),panel:css("--panel")};}
+function prep(cv){const dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  g.font='11px "IBM Plex Mono",ui-monospace,Menlo,monospace';g.lineJoin="round";return {g:g,w:w,h:h};}
+function axes(g,r,xt,yt,xs,ys,xl,yl){
+  g.strokeStyle=C.rule;g.lineWidth=1;g.fillStyle=C.muted;
+  g.beginPath();
+  yt.forEach(function(t){const y=Math.round(ys(t[0]))+.5;g.moveTo(r.x,y);g.lineTo(r.x+r.w,y);});
+  g.stroke();
+  g.strokeRect(r.x+.5,r.y+.5,r.w,r.h);
+  g.textAlign="right";g.textBaseline="middle";
+  yt.forEach(function(t){g.fillText(t[1],r.x-5,ys(t[0]));});
+  g.textAlign="center";g.textBaseline="top";
+  xt.forEach(function(t){const x=xs(t[0]);g.beginPath();g.moveTo(x,r.y+r.h);g.lineTo(x,r.y+r.h+3);g.stroke();g.fillText(t[1],x,r.y+r.h+5);});
+  if(xl){g.textAlign="right";g.fillText(xl,r.x+r.w,r.y+r.h+17);}
+  if(yl){g.save();g.font='italic 13px "STIX Two Text",Georgia,"Times New Roman",serif';g.textAlign="left";g.textBaseline="top";const tw=g.measureText(yl).width;g.fillStyle=C.panel;g.fillRect(r.x+2,r.y+2,tw+8,17);g.fillStyle=C.ink;g.fillText(yl,r.x+6,r.y+4);g.restore();}
+}
+function dashed(g,x0,y0,x1,y1){g.save();g.setLineDash([5,4]);g.strokeStyle=C.ref;g.lineWidth=1.2;g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.stroke();g.restore();}
+
+const PB_MAX=3.2,NB=32,hist=new Float32Array(NB);
+const syCurve=(function(){const n=200,xs=[],ps=[];let Z=0;const a=M.vol*M.lam4/4;
+  for(let i=0;i<=n;i++){const x=-PB_MAX+2*PB_MAX*i/n,p=Math.exp(-a*x*x*x*x);xs.push(x);ps.push(p);Z+=p*2*PB_MAX/n;}
+  return {x:xs,p:ps.map(function(v){return v/Z;})};})();
+const SY_PEAK=Math.max.apply(null,syCurve.p);
+
+function drawTrace(k,pbNow){
+  const P=prep(document.getElementById("trace")),g=P.g;
+  const mw=Math.min(120,P.w*.2),r={x:34,y:6,w:P.w-34-mw-14,h:P.h-6-32};
+  const nice=[60,150,400,1000,2500,6000],xmax=Math.min(K,nice.find(function(v){return v>=k*1.15;})||K);
+  const xs=function(v){return r.x+r.w*v/xmax;},ys=function(v){return r.y+r.h*(.5-v/(2*PB_MAX));};
+  const xt=[0,.25,.5,.75,1].map(function(f){const v=Math.round(xmax*f);return [v,""+v];});
+  axes(g,r,xt,[[-3,"−3"],[-1.5,""],[0,"0"],[1.5,""],[3,"3"]],xs,ys,"trajectory","φ̄ / H");
+  g.save();g.beginPath();g.rect(r.x,r.y,r.w,r.h);g.clip();
+  g.strokeStyle=C.data;g.lineWidth=k>400?1:1.4;g.beginPath();
+  for(let i=0;i<=k;i++){const x=xs(i),y=ys(pbPost[i]);if(i)g.lineTo(x,y);else g.moveTo(x,y);}
+  g.stroke();g.restore();
+  g.fillStyle=C.mark;g.beginPath();g.arc(xs(Math.min(k,xmax)),ys(pbNow),3.5,0,7);g.fill();
+  // marginal
+  const hx=r.x+r.w+14,hw=mw-4;hist.fill(0);
+  for(let i=1;i<=k;i++){const b=Math.floor((pbPost[i]+PB_MAX)/(2*PB_MAX)*NB);if(b>=0&&b<NB)hist[b]++;}
+  const bw=2*PB_MAX/NB,scale=hw/(SY_PEAK*1.9);
+  g.fillStyle=C.soft;
+  for(let b=0;b<NB;b++){if(!hist[b])continue;const dens=hist[b]/(Math.max(k,1)*bw),y1=ys(-PB_MAX+b*bw),y0=ys(-PB_MAX+(b+1)*bw);
+    g.fillRect(hx,y0+.5,Math.min(hw,dens*scale),y1-y0-1);}
+  g.save();g.setLineDash([5,4]);g.strokeStyle=C.ref;g.lineWidth=1.2;g.beginPath();
+  syCurve.x.forEach(function(x,i){const X=hx+syCurve.p[i]*scale,Y=ys(x);if(i)g.lineTo(X,Y);else g.moveTo(X,Y);});g.stroke();g.restore();
+  g.strokeStyle=C.rule;g.beginPath();g.moveTo(hx+.5,r.y);g.lineTo(hx+.5,r.y+r.h);g.stroke();
+    g.fillStyle=C.mark;g.fillRect(hx-4,ys(pbNow)-1,hw+4,2);
+}
+
+function bandFill(g,lx,ys,lo,hi){const N=M.band_N;g.beginPath();
+  for(let i=0;i<N.length;i++){const X=lx(N[i]),Y=ys(hi[i]);if(i)g.lineTo(X,Y);else g.moveTo(X,Y);}
+  for(let i=N.length-1;i>=0;i--)g.lineTo(lx(N[i]),ys(lo[i]));
+  g.closePath();g.fill();}
+function runPanel(g,r,k,arr,ref,band,lo,hi,ticks,label){
+  const N0=4,lx=function(v){return r.x+r.w*Math.log(v/N0)/Math.log(K/N0);},ys=function(v){return r.y+r.h*(hi-v)/(hi-lo);};
+  const xt=[10,100,1000].filter(function(v){return v<=K;}).map(function(v){return [v,""+v];});
+  axes(g,r,r.w<170?xt.filter(function(t){return t[0]!==100;}):xt,ticks,lx,ys,"N",label);
+  g.save();g.beginPath();g.rect(r.x,r.y,r.w,r.h);g.clip();
+  g.fillStyle=C.soft;g.globalAlpha=.6;bandFill(g,lx,ys,band[0],band[3]);g.globalAlpha=1;bandFill(g,lx,ys,band[1],band[2]);
+  dashed(g,r.x,ys(ref),r.x+r.w,ys(ref));
+  if(k>=N0){g.strokeStyle=C.data;g.lineWidth=1.6;g.beginPath();
+    for(let i=N0;i<=k;i++){const X=lx(i),Y=ys(arr[i]);if(i>N0)g.lineTo(X,Y);else g.moveTo(X,Y);}g.stroke();
+    g.fillStyle=C.mark;g.beginPath();g.arc(lx(k),ys(arr[k]),3.5,0,7);g.fill();}
+  g.restore();
+}
+function specPanel(g,r,k){
+  const lo=Math.log(3e-3),hi=Math.log(300);
+  const xs=function(n){return r.x+r.w*(n+.5)/(L+1);},ys=function(v){return r.y+r.h*(hi-Math.log(Math.max(v,1e-9)))/(hi-lo);};
+  const xt=[];for(let n=0;n<=L;n+=2)xt.push([n,""+n]);
+  axes(g,r,xt,[[.01,"10⁻²"],[.1,""],[1,"1"],[10,""],[100,"10²"]],xs,ys,"shell n",r.w<170?"⟨c²⟩ per mode":"power per mode ⟨c²⟩");
+  g.save();g.beginPath();g.rect(r.x,r.y,r.w,r.h);g.clip();
+  g.strokeStyle=C.data;g.lineWidth=1.5;
+  for(let n=0;n<=L;n++){const pred=n?1/(n*(n+3)):M.pred_var*M.vol;g.beginPath();g.arc(xs(n),ys(pred),5.2,0,7);g.stroke();}
+  if(k>=1){g.fillStyle=C.mark;
+    for(let n=0;n<=L;n++){g.beginPath();g.arc(xs(n),ys(runShell[k*(L+1)+n]),3.2,0,7);g.fill();}
+  }
+  g.restore();
+}
+function drawRun(k){
+  const P=prep(document.getElementById("run")),g=P.g,ml=34,pad=6,mb=32;
+  const rects=[];
+  const tight=P.w<560;
+  if(P.w<380){const h=(P.h-3*(mb+pad))/3;for(let i=0;i<3;i++)rects.push({x:ml,y:pad+i*(h+mb+pad),w:P.w-ml-10,h:h});}
+  else{const gap=tight?30:44,w=(P.w-ml-2*gap-10)/3;for(let i=0;i<3;i++)rects.push({x:ml+i*(w+gap),y:pad,w:w,h:P.h-pad-mb});}
+  runPanel(g,rects[0],k,runVar,M.pred_var,M.band_var,0,2.8,[[0,"0"],[1,"1"],[2,"2"]],"⟨φ̄²⟩ / H²");
+  runPanel(g,rects[1],k,runU,M.pred_binder,M.band_U,-.3,.7,[[0,"0"],[.25,".25"],[.5,".5"]],rects[1].w<170?"Binder U":"Binder cumulant U");
+  specPanel(g,rects[2],k);
+}
+
+/* ---------- colour bar ---------- */
+function drawBar(){const cv=document.getElementById("cbar"),g=cv.getContext("2d");cv.width=12;cv.height=256;
+  const im=g.createImageData(12,256);for(let y=0;y<256;y++)for(let x=0;x<12;x++){const o=(y*12+x)*4,c=(255-y)*3;im.data[o]=lut[c];im.data[o+1]=lut[c+1];im.data[o+2]=lut[c+2];im.data[o+3]=255;}
+  g.putImageData(im,0,0);}
+
+/* ---------- transport ---------- */
+const $=function(id){return document.getElementById(id);};
+const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+let t=reduce?K:0,playing=!reduce,yaw=.6,tilt=.42,last=0,dragging=false,dirty=true,lastK=-1;
+function autoRate(tt){return tt<5?1.2:Math.min(160,1.2*Math.pow(1.045,(tt-5)));}
+function rate(tt){const v=$("tempo").value;return v==="auto"?autoRate(tt):+v;}
+
+function render(){
+  const kDone=Math.min(K,Math.floor(t)),frac=t-kDone;
+  const kNext=Math.min(K,kDone+1),flow=rate(t)<=10&&kDone<K&&frac>0;
+  let x=flow?frac:0,k=flow?kNext:kDone;
+  let pb;
+  if(flow){pb=zeroModeAt(k,x,true);}else{pb=pbPost[k];}
+  const u=flow?Math.min(1,x/FLOW_FRAC):1;
+  big.layout(tilt);
+  fieldAt(0,Math.max(1,k),u,flow);big.synth(coef,pb,big.tex);big.draw(yaw,M.vmax);
+  small.forEach(function(o){o.sp.layout(tilt);fieldAt(o.s,Math.max(1,k),u,flow);o.sp.synth(coef,pb,o.sp.tex);o.sp.draw(yaw,M.vmax);});
+  if(kDone===0&&!flow){/* start configuration: fieldAt used k=1 end; redo with start */
+    const draw0=function(sp,s){for(let i=0;i<NS;i++)coef[i]=Q[s*NS+i]*dq[i];sp.synth(coef,pbPost[0],sp.tex);sp.draw(yaw,M.vmax);};
+    draw0(big,0);small.forEach(function(o){draw0(o.sp,o.s);});
+  }
+  if(kDone!==lastK||dirty||flow){
+    drawTrace(kDone,pb);
+    if(kDone!==lastK||dirty){drawRun(kDone);}
+    $("s-k").textContent=kDone;
+    $("s-pb").textContent=(pb>=0?"+":"−")+Math.abs(pb).toFixed(2);
+    $("s-acc").textContent=kDone?(100*runAcc[kDone]).toFixed(0)+"%":"—";
+    $("s-var").textContent=kDone>1?runVar[kDone].toFixed(3):"—";
+    $("s-u").textContent=kDone>3?runU[kDone].toFixed(3):"—";
+    $("seek").value=kDone;
+    lastK=kDone;dirty=false;
+  }
+  const ph=$("phase");
+  if(flow){const rej=!ACC[k];ph.className=rej&&x<FLOW_FRAC?"rej":"";
+    ph.textContent=x<FLOW_FRAC?(rej?"trajectory rejected":"Hamiltonian flow"):"zero-mode draw";}
+  else{ph.className="";ph.textContent=kDone>=K?"chain complete":(playing?"sampling":"paused");}
+}
+function tick(now){
+  const dt=Math.min(.1,(now-last)/1000||0);last=now;
+  if(playing){t+=rate(t)*dt;if(t>=K){t=K;playing=false;$("play").textContent="Replay";}}
+  if(!dragging&&playing)yaw+=dt*.12;
+  render();
+  requestAnimationFrame(tick);
+}
+$("play").addEventListener("click",function(){
+  if(t>=K){t=0;playing=true;}else playing=!playing;
+  this.textContent=playing?"Pause":"Play";dirty=true;});
+$("restart").addEventListener("click",function(){t=0;playing=true;$("play").textContent="Pause";dirty=true;});
+$("seek").max=K;$("seek").addEventListener("input",function(){t=+this.value;playing=false;$("play").textContent=t>=K?"Replay":"Play";dirty=true;});
+$("tempo").addEventListener("change",function(){dirty=true;});
+$("cmap").addEventListener("change",function(){lut=LUT[this.value];drawBar();dirty=true;});
+(function(){const c=$("big");let px=0,py=0;
+  c.addEventListener("pointerdown",function(e){dragging=true;px=e.clientX;py=e.clientY;c.setPointerCapture(e.pointerId);});
+  c.addEventListener("pointermove",function(e){if(!dragging)return;yaw-=(e.clientX-px)*.008;tilt=Math.max(-1.4,Math.min(1.4,tilt+(e.clientY-py)*.008));px=e.clientX;py=e.clientY;});
+  const up=function(){dragging=false;};c.addEventListener("pointerup",up);c.addEventListener("pointercancel",up);
+})();
+window.addEventListener("resize",function(){dirty=true;});
+if(window.matchMedia)matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(){readColours();dirty=true;});
+new MutationObserver(function(){readColours();dirty=true;}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+/* ---------- text ---------- */
+$("s-K").textContent=K;
+$("cmax").textContent="+"+M.vmax.toFixed(1);$("cmin").textContent="−"+M.vmax.toFixed(1);
+$("params").innerHTML=[
+  ["cutoff","n_max = "+L],["modes",M.n_modes.toLocaleString("en")],["quadrature points",M.grid_points.toLocaleString("en")],
+  ["λ",M.lam4],["m²/H²",M.m2.toFixed(4)],["leapfrog","ε = "+M.eps+", "+M.n_steps+" steps"],
+  ["acceptance",(100*M.acceptance).toFixed(0)+"%"],["⟨e<sup>−ΔH</sup>⟩",M.exp_negdH.toFixed(3)]
+].map(function(p){return "<li>"+p[0]+" <b>"+p[1]+"</b></li>";}).join("");
+$("notes").innerHTML=
+ "<p><b>The chain.</b> "+K.toLocaleString("en")+" consecutive configurations of one hybrid Monte Carlo chain, at the paper’s weakest-coupling point for this cutoff, after "+M.n_therm.toLocaleString("en")+" thermalisation trajectories. Each sphere is computed from all "+M.n_modes.toLocaleString("en")+" mode coefficients of the configuration.</p>"+
+ "<p><b>One step of the algorithm.</b> The field is given a random momentum and follows a Hamiltonian trajectory; the result is accepted or rejected; then the zero mode is redrawn exactly. At slow tempo you see each of these: the field flowing along the trajectory, staying put when a trajectory is rejected, and shifting uniformly in colour at the zero-mode draw. The trajectory is played from its two end configurations and matches the integrator’s path to better than 1%.</p>"+
+ "<p><b>What to watch.</b> The whole sphere drifting between red and blue is the zero mode φ̄, the average of the field over <i>S</i><sup>4</sup>. Its histogram fills the Starobinsky–Yokoyama distribution exp(−<i>V</i><sub>4</sub> λφ̄<sup>4</sup>/4), flatter than a Gaussian, and the running estimates settle onto the predictions. The shaded bands show where 68% and 95% of independent chains of that length fall.</p>"+
+ "<p><b>Reference values.</b> Dashed lines: ⟨φ̄²⟩ = "+M.pred_var.toFixed(3)+" <i>H</i>² and U = 1 − ⟨φ̄⁴⟩/3⟨φ̄²⟩² = "+M.pred_binder.toFixed(3)+". The production run, "+M.prod_n.toLocaleString("en")+" configurations, gives "+M.prod_var.toFixed(3)+" ± "+M.prod_var_err.toFixed(3)+" and "+M.prod_binder.toFixed(4)+" ± "+M.prod_binder_err.toFixed(4)+".</p>";
+
+readColours();drawBar();
+function start(){readColours();dirty=true;requestAnimationFrame(function(n){last=n;tick(n);});}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(start,start);else start();
+if(reduce)$("play").textContent="Replay";
+})();
+</script>

@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+
+# simulation output and recomputed tables
+runs/
+recomputed/
+
+# the Monte Carlo chains (2.1 GB) are distributed via Zenodo, not git
+reproduction/chains/constrained/
+reproduction/chains/unconstrained/

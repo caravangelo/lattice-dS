@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lattice-ds"
+version = "1.0.0"
+description = "Lattice Monte Carlo of quantum field theory on Euclidean de Sitter space (S^4): lambda phi^4 theory with a spectral regulator"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Angelo Caravano" }]
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=2.0",
+  "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+figures = ["matplotlib>=3.8"]
+dev = ["pytest"]
+
+[project.scripts]
+lattice-ds = "lattice_ds.cli:main"
+
+[project.urls]
+Repository = "https://github.com/caravangelo/lattice-dS"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

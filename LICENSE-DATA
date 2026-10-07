@@ -1,0 +1,10 @@
+The data in reproduction/data/, reproduction/chains/ and
+animations/chain_nmax10.npz, and the Monte Carlo chains archived on Zenodo
+(doi:10.5281/zenodo.23242257), are released under the
+Creative Commons Attribution 4.0 International License (CC BY 4.0),
+https://creativecommons.org/licenses/by/4.0/
+
+Copyright (c) 2026 Angelo Caravano
+
+You are free to share and adapt the data for any purpose, provided you give
+appropriate credit by citing the accompanying paper (see README.md).

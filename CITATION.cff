@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this code or these data, please cite the paper below."
+title: "lattice-dS: lattice Monte Carlo of quantum field theory on Euclidean de Sitter space"
+type: software
+authors:
+  - family-names: Caravano
+    given-names: Angelo
+    affiliation: "Gravitation Astroparticle Physics Amsterdam (GRAPPA), University of Amsterdam"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/caravangelo/lattice-dS"
+preferred-citation:
+  type: article
+  title: "Lattice Monte Carlo of λφ⁴ on Euclidean de Sitter"
+  authors:
+    - family-names: Caravano
+      given-names: Angelo
+  journal: "arXiv"
+  year: 2026
+  identifiers:
+    - type: other
+      value: "arXiv:XXXX.XXXXX"
