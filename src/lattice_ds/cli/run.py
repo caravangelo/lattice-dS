@@ -24,10 +24,15 @@ Properties:
   thermalisation acceptance >= 0.05, 0.9 < <exp(-dH)> < 1.1 and max|dH| <= 25.
 - One BLAS thread per worker: the parallelism is across chains (set by `lattice_ds.cli`).
 
-Seeds. Chain i_seed of the point (n_max, i_m2, i_lam) uses
-seed = base_seed + 100000 n_max + 1000 i_m2 + 10 i_lam + i_seed, where i_m2 and
-i_lam are positions in the --m2 and --lam lists. With --eps-auto the same seed
-drives the calibration and then, restarted, the production chain.
+Seeds. Chain i_seed of the point (n_max, m^2, lambda) is seeded by
+numpy.random.SeedSequence([base_seed, n_max, round(1e9 (m^2 + 1000)), round(1e9 lambda), i_seed]),
+so chains at different points, or from different invocations with the same
+--base-seed, never share a seed. (Version 1.0.0 derived the seed from the
+positions in the --m2 and --lam lists, which let chains at neighbouring
+couplings share seeds; the chains published with the paper carry those seeds,
+recorded in each file.) --seed runs one point with explicitly given seeds, for
+example to re-run a published chain. With --eps-auto the same seed drives the
+calibration and then, restarted, the production chain.
 """
 
 from __future__ import annotations
@@ -50,8 +55,13 @@ def chain_tag(n_max, m2, lam4, seed):
     return f"nmax{n_max}_m2{m2:g}_lam{lam4:g}_seed{seed}"
 
 
-def derive_seed(base, n_max, i_m2, i_lam, i_seed):
-    return int(base + 100000 * n_max + 1000 * i_m2 + 10 * i_lam + i_seed)
+def derive_seed(base, n_max, m2, lam4, i_seed):
+    """Seed of chain i_seed at the point (n_max, m2, lam4): a function of the point itself."""
+    # SeedSequence wants non-negative integers: the mass is shifted by 10^3 (bare masses are > -1000).
+    key = [int(base), int(n_max), int(round(1e9 * (float(m2) + 1000.0))), int(round(1e9 * float(lam4))), int(i_seed)]
+    if min(key) < 0:
+        raise ValueError(f"cannot derive a seed for n_max={n_max}, m2={m2}, lam4={lam4}, base={base}")
+    return int(np.random.SeedSequence(key).generate_state(1, dtype=np.uint32)[0])
 
 
 def healthy(acc, therm_acc, exp_negdH, dH_max):
@@ -117,6 +127,7 @@ def main(argv=None):
     mass.add_argument("--mass-table", help="JSON list of {n_max, lam4, m2[, seeds]}; replaces --n-max/--lam/--m2")
     ap.add_argument("--seeds", type=int, default=2, help="independent chains per point")
     ap.add_argument("--base-seed", type=int, default=260910)
+    ap.add_argument("--seed", type=int, nargs="+", help="explicit seeds, one chain each; a single point only")
     ap.add_argument("--n-meas", type=int, default=20000)
     ap.add_argument("--n-therm", type=int, default=2000)
     ap.add_argument("--eps", type=float, default=0.25, help="leapfrog step size")
@@ -135,24 +146,26 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if not a.mass_table and not (a.n_max and a.lam):
         ap.error("--n-max and --lam are required unless --mass-table is given")
+    if a.seed and (a.mass_table or len(a.n_max) != 1 or len(a.lam) != 1 or (a.m2 and len(a.m2) != 1)):
+        ap.error("--seed runs a single point: one --n-max, one --lam and one --m2 (or --one-loop-mass)")
 
     common = dict(outdir=a.outdir, n_therm=a.n_therm, n_meas=a.n_meas, eps=a.eps, n_steps=a.n_steps,
                   zero_mode_updates=a.zero_mode_updates, precondition=a.precondition, eps_auto=a.eps_auto,
                   randomize_traj=not a.fixed_traj, checkpoint_every=a.checkpoint_every)
     jobs = []
     if a.mass_table:
-        for i_e, e in enumerate(json.loads(Path(a.mass_table).read_text())):
+        for e in json.loads(Path(a.mass_table).read_text()):
+            n_max, lam4, m2 = int(e["n_max"]), float(e["lam4"]), float(e["m2"])
             for s in range(int(e.get("seeds", a.seeds))):
-                jobs.append(dict(common, n_max=int(e["n_max"]), lam4=float(e["lam4"]), m2=float(e["m2"]),
-                                 seed=derive_seed(a.base_seed, int(e["n_max"]), i_e, 0, s)))
+                jobs.append(dict(common, n_max=n_max, lam4=lam4, m2=m2, seed=derive_seed(a.base_seed, n_max, m2, lam4, s)))
     else:
         for n_max in a.n_max:
-            for i_m2, m2 in enumerate([None] if a.one_loop_mass else a.m2):
-                for i_l, lam4 in enumerate(a.lam):
+            for m2 in ([None] if a.one_loop_mass else a.m2):
+                for lam4 in a.lam:
                     this_m2 = P.one_loop_bare_mass(n_max, lam4) if a.one_loop_mass else m2
-                    for s in range(a.seeds):
-                        jobs.append(dict(common, n_max=n_max, lam4=lam4, m2=this_m2,
-                                         seed=derive_seed(a.base_seed, n_max, i_m2, i_l, s)))
+                    seeds = a.seed or [derive_seed(a.base_seed, n_max, this_m2, lam4, s) for s in range(a.seeds)]
+                    for seed in seeds:
+                        jobs.append(dict(common, n_max=n_max, lam4=lam4, m2=this_m2, seed=seed))
 
     print(f"{len(jobs)} chains -> {a.outdir}  ({a.workers} workers)")
     if a.dry_run:
