@@ -19,11 +19,11 @@ chains/manifest.csv  list of the Monte Carlo chains
 figures/             output of the figure scripts
 ```
 
-The Monte Carlo chains (about 4000 files, 2 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); the record is being finalised and will be published at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download `chains_constrained.zip` and `chains_unconstrained.zip` and unzip them inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
+The Monte Carlo chains (about 4000 files, 2 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); it might take a few days for the record to be available at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download `chains_constrained.zip` and `chains_unconstrained.zip` and unzip them inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
 
 ## Data-set note
 
-The tables and figures here are computed from the final data set. In the version of the chains used for arXiv v1 of the paper, the unconstrained chains had been seeded from the positions of $\lambda$ and $m^2$ in the launch lists, so chains at neighbouring couplings (and, in the mass scans, at the same $n_{\max}$ across couplings) shared seeds: per-point results were unaffected, but fits across couplings at fixed $n_{\max}$ (the screening coefficient $u$ and $\kappa$) had errors underestimated by about 15%. All unconstrained chains were therefore regenerated with `lattice-ds` version 1.0.0, whose seeds depend on the point itself, with the same design as before except that nine Table II ensembles that had two chains of 8 000 measurements now have six of 30 000. Constrained chains and `force_*` chains, whose seeds were already independent, are unchanged. The numbers in the tables, in particular $u$, $\kappa$, $U$ and its errors, differ accordingly from arXiv v1 in small ways; v2 of the paper will match this data set. `manifest.csv` lists the chains of the final set; the last few hundred mass-scan chains at $n_{\max} = 8, 10$ are being added.
+The tables and figures here are computed from the final data set; the first preprint (arXiv v1) used an earlier version of the unconstrained chains, so its numbers differ in small ways, and Fig. 2 there shows two fit windows instead of three. The journal version of the paper will match this data set. `manifest.csv` lists the chains of the final set.
 
 ## Reproducing the paper
 
@@ -111,7 +111,7 @@ Two simulation sets:
 | `local_exponent` | $d\ln V_C'/d\ln\bar\phi$ at $\sigma$ (3 for a pure quartic) |
 | `y_taylor`, `y_taylor_err` | $9\lambda_R S_2/\Omega$ with $\lambda_R$ the quartic Taylor coefficient at the origin from the same fit |
 | `used_in_paper` | 0 for the $n_{\max} = 4$ points at $\lambda = 80$ and $120$ ($\lambda = 240$ was also simulated and is not tabulated), whose massless point is prescription dependent because the induced mass of the nonzero modes at the typical field approaches the cutoff; they are excluded from the figures and from every number quoted in the paper, which restricts Set B to $\lambda \le 60$ (Appendix D4). Their chains are in `chains/`. |
-| `m2_crossing`, `m2_crossing_err` | independent massless point from histogram fits of the unconstrained mass scans (Appendix D3 of the paper), where available. These two columns are tabulated results of that analysis and are carried over by `reproduce_tables.py`, not recomputed by it |
+| `m2_crossing`, `m2_crossing_err` | independent estimate of the massless point from a histogram analysis of the unconstrained mass scans (Appendix D3 of the paper), where available; plotted in Fig. massless(b) by `fig_massless.py`. These two columns are provided as numbers only: the histogram analysis is not part of this repository, and `reproduce_tables.py` copies them from the published table instead of recomputing them |
 | `chi2`, `dof` | of the joint fit at $m_*^2$ |
 | `n_constrained`, `n_unconstrained_files` | number of constrained chains and of unconstrained files pooled into the ensemble at the point |
 | `ess_unconstrained` | effective sample fraction of the unconstrained ensemble after reweighting to $m_*^2$ |

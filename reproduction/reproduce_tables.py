@@ -219,8 +219,9 @@ def do_setb(a):
             rows = pool.map(setb_point, jobs, chunksize=1)
     else:
         rows = [setb_point(j) for j in jobs]
-    # Columns that are tabulated, not recomputed here: the histogram estimate of the massless
-    # point (Appendix D3; a separate analysis of the mass scans) and the used_in_paper flag.
+    # Columns copied from the published table, not recomputed here: the histogram estimate of
+    # the massless point (Appendix D3; an analysis not included in this repository) and the
+    # used_in_paper flag.
     for r, p in zip(rows, pub):
         r.update(m2_crossing=p.get("m2_crossing", ""), m2_crossing_err=p.get("m2_crossing_err", ""),
                  used_in_paper=p.get("used_in_paper", ""))

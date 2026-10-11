@@ -351,26 +351,24 @@ def fig2(data, cutoffs, window, out):
     """Result 2: the residual slope against the cutoff.  On a logarithmic
     cutoff axis the one-loop prediction (9/2) S_2/Omega is close to a straight
     line, so what the eye reads off is the logarithmic running of lambda.
-    Filled points are fitted on lambda <= 0.1, where one loop should hold;
-    open points on lambda <= 0.2, where the analytic counterterm's own
-    higher-order correction has set in."""
-    fig, ax = plt.subplots(figsize=(COLW, 1.65))
+    Three fit windows: lambda <= 0.05 (filled), 0.1 (light) and 0.2 (open).
+    The excess over one loop grows with the window and with the cutoff, as a
+    residual mass of two-loop order (~ lambda^2 S_1) does."""
+    fig, ax = plt.subplots(figsize=(COLW, 1.8))
     ns = np.arange(3, 14)
     h1L, = ax.plot(ns, [2 * slope_1loop(n) for n in ns], color=INK, lw=1.2, zorder=3,
                    label=r"one loop, $u=9S_2(n_{\max})/\Omega$")
+    windows = ((0.05, -0.04, dict(mfc=None)), (0.1, 0.0, dict(mfc=None, alpha=0.45)), (0.2, 0.04, dict(mfc="white")))
     for nm in cutoffs:
-        c1, e1 = fit_slope(data, nm, 0.1)
-        c2, e2 = fit_slope(data, nm, 0.2)
-        ax.errorbar([nm * 0.975], [2 * c1], yerr=[2 * e1], marker=MRK[nm], color=COL[nm],
-                    zorder=5, **{**EB, "ms": 4.6, "mfc": COL[nm]})
-        ax.errorbar([nm * 1.025], [2 * c2], yerr=[2 * e2], marker=MRK[nm], color=COL[nm],
-                    zorder=4, **{**EB, "ms": 4.6})
-    ax.legend(handles=[Line2D([], [], lw=0, marker="o", ms=4.6, color=MUTED, mfc=MUTED,
-                              label=r"$\lambda\leq0.1$"),
-                       Line2D([], [], lw=0, marker="o", ms=4.6, color=MUTED, mfc="white",
-                              mew=1.0, label=r"$\lambda\leq0.2$")],
-              frameon=False, loc="upper left", fontsize=7.5, ncol=2,
-              handletextpad=0.35, columnspacing=1.0, borderaxespad=0.25)
+        for w, dx, st in windows:
+            c, e = fit_slope(data, nm, w)
+            ax.errorbar([nm * (1 + dx)], [2 * c], yerr=[2 * e], marker=MRK[nm], color=COL[nm], zorder=5,
+                        **{**EB, "ms": 4.6, **{k: (COL[nm] if v is None else v) for k, v in st.items()}})
+    ax.legend(handles=[Line2D([], [], lw=0, marker="o", ms=4.6, color=MUTED, mfc=MUTED, label=r"$\lambda\leq0.05$"),
+                       Line2D([], [], lw=0, marker="o", ms=4.6, color=MUTED, mfc=MUTED, alpha=0.45, label=r"$\lambda\leq0.1$"),
+                       Line2D([], [], lw=0, marker="o", ms=4.6, color=MUTED, mfc="white", mew=1.0, label=r"$\lambda\leq0.2$")],
+              frameon=False, loc="upper left", fontsize=7.5, ncol=3,
+              handletextpad=0.35, columnspacing=0.9, borderaxespad=0.25)
     ax.add_artist(ax.get_legend())
     ax.legend(handles=[h1L], frameon=False, loc="lower right", fontsize=7.5,
               handlelength=1.9, handletextpad=0.45, borderaxespad=0.3)
@@ -378,9 +376,9 @@ def fig2(data, cutoffs, window, out):
     ax.set_xticks(list(cutoffs)); ax.set_xticklabels([str(x) for x in cutoffs])
     ax.minorticks_off()
     ax.set_xlabel(r"cutoff $n_{\max}\simeq\Lambda/H$")
-    ax.set_ylabel(r"screening coefficient $u$")
-    ax.set_ylim(0.180, 0.432)
-    ax.set_yticks([0.20, 0.24, 0.28, 0.32, 0.36, 0.40])
+    ax.set_ylabel(r"screening coeff. $u$")
+    ax.set_ylim(0.10, 0.46)
+    ax.set_yticks([0.1, 0.2, 0.3, 0.4])
     grid(ax)
     fig.tight_layout(pad=0.3)
     fig.savefig(out / "fig2_running.pdf")

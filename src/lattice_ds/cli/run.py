@@ -27,11 +27,9 @@ Properties:
 Seeds. Chain i_seed of the point (n_max, m^2, lambda) is seeded by
 numpy.random.SeedSequence([base_seed, n_max, round(1e9 (m^2 + 1000)), round(1e9 lambda), i_seed]),
 so chains at different points, or from different invocations with the same
---base-seed, never share a seed. (Version 1.0.0 derived the seed from the
-positions in the --m2 and --lam lists, which let chains at neighbouring
-couplings share seeds; the chains published with the paper carry those seeds,
-recorded in each file.) --seed runs one point with explicitly given seeds, for
-example to re-run a published chain. With --eps-auto the same seed drives the
+--base-seed, never share a seed. --seed runs one point with explicitly given
+seeds, for example to re-run a published chain from the seed recorded in its
+file. With --eps-auto the same seed drives the
 calibration and then, restarted, the production chain.
 """
 
