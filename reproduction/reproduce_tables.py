@@ -85,10 +85,10 @@ def seta_point(chains, n, lam):
 
 def do_seta(a):
     pub = read_table("setA_points.csv")
-    rows = [seta_point(a.chains, int(r["n_max"]), float(r["lam"])) for r in pub]
+    rows = [dict(seta_point(a.chains, int(r["n_max"]), float(r["lam"])), role=r.get("role", "Set A")) for r in pub]
     write(a.out, "setA_points.csv", rows,
           ["n_max", "lam", "m2_bare", "n_chains", "n_meas_per_chain", "phibar2", "phibar2_err",
-           "phibar2_SY", "U", "U_err", "U_SY"])
+           "phibar2_SY", "U", "U_err", "U_SY", "role"])
     compare(pub, rows, [("m2_bare", None), ("n_chains", None), ("n_meas_per_chain", None),
                         ("phibar2", "phibar2_err"), ("phibar2_err", "rel"), ("phibar2_SY", None),
                         ("U", "U_err"), ("U_err", "rel")])
@@ -202,6 +202,12 @@ def setb_point(args):
     return row
 
 
+SETB_COLUMNS = ["n_max", "lam", "x", "y_chain", "y", "y_err_stat", "y_err_window", "U", "U_err", "U_SY", "sigma",
+                "m2_star", "m2_star_err", "fit_window", "local_exponent", "y_taylor", "y_taylor_err",
+                "m2_crossing", "m2_crossing_err", "used_in_paper",
+                "chi2", "dof", "n_constrained", "n_unconstrained_files", "ess_unconstrained", "m2_star_alt"]
+
+
 def do_setb(a):
     pub = read_table("setB_points.csv")
     if a.points:
@@ -213,10 +219,12 @@ def do_setb(a):
             rows = pool.map(setb_point, jobs, chunksize=1)
     else:
         rows = [setb_point(j) for j in jobs]
-    write(a.out, "setB_points.csv", rows,
-          ["n_max", "lam", "x", "y_chain", "y", "y_err_stat", "y_err_window", "U", "U_err", "U_SY", "sigma",
-           "m2_star", "m2_star_err", "fit_window", "local_exponent", "y_taylor", "y_taylor_err",
-           "chi2", "dof", "n_constrained", "n_unconstrained_files", "ess_unconstrained", "m2_star_alt"])
+    # Columns that are tabulated, not recomputed here: the histogram estimate of the massless
+    # point (Appendix D3; a separate analysis of the mass scans) and the used_in_paper flag.
+    for r, p in zip(rows, pub):
+        r.update(m2_crossing=p.get("m2_crossing", ""), m2_crossing_err=p.get("m2_crossing_err", ""),
+                 used_in_paper=p.get("used_in_paper", ""))
+    write(a.out, "setB_points.csv", rows, SETB_COLUMNS)
     compare(pub, rows, [("x", None), ("y_chain", None), ("y", "y_err_stat"), ("y_err_stat", "rel"),
                         ("y_err_window", "y_err_stat"), ("U", "U_err"), ("U_err", "rel"), ("sigma", None),
                         ("m2_star", "m2_star_err"), ("m2_star_err", "rel"), ("local_exponent", None),
