@@ -11,6 +11,7 @@ Data are released under CC-BY-4.0 (`LICENSE-DATA` at the top of the repository).
 ```
 make_figures.py      Figs. 1-3 of the paper from data/ (numpy and matplotlib only)
 reproduce_tables.py  recomputes the tables in data/ from the chains
+fit_histograms.py    histogram estimate of the massless point from the mass scans (Appendix D3; needs the chains)
 fig_massless.py      appendix figure on the massless point (needs the chains)
 fig_so5.py           appendix figure on SO(5) invariance against the grid degree
 fig_mc_sampling.py   appendix figure on the Monte Carlo sampling (chain in ../animations/)
@@ -19,7 +20,7 @@ chains/manifest.csv  list of the Monte Carlo chains
 figures/             output of the figure scripts
 ```
 
-The Monte Carlo chains (about 4000 files, 2 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); it might take a few days for the record to be available at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download `chains_constrained.zip` and `chains_unconstrained.zip` and unzip them inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
+The Monte Carlo chains (4041 files, 5.5 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); it might take a few days for the record to be available at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download `chains_constrained.zip` and `chains_unconstrained.zip` and unzip them inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
 
 ## Data-set note
 
@@ -43,10 +44,11 @@ python reproduction/fig_mc_sampling.py   # appendix: Monte Carlo sampling figure
 python reproduction/reproduce_tables.py --chains reproduction/chains setA
 python reproduction/reproduce_tables.py --chains reproduction/chains setA-coupling
 python reproduction/reproduce_tables.py --chains reproduction/chains setB --jobs 4
+python reproduction/fit_histograms.py   --chains reproduction/chains      # m2_crossing columns (minutes)
 python reproduction/fig_massless.py     --chains reproduction/chains      # appendix figure
 ```
 
-recompute `data/*.csv` into `recomputed/` and print the largest deviation from the published values, column by column. Set A takes seconds, Set B about two hours of CPU time. Every number, including the bootstrap errors, is a deterministic function of the chains, so the recomputed tables agree with the published ones to the printed digits.
+recompute `data/*.csv` into `recomputed/` and print the largest deviation from the published values, column by column. Set A takes seconds, Set B about two hours of CPU time, the histogram fits a few minutes. Every number, including the bootstrap errors, is a deterministic function of the chains, so the recomputed tables agree with the published ones to the printed digits.
 
 **3. Chains from scratch.** The `lattice-ds` command (top-level README) writes files in the format of the published chains.
 
@@ -111,7 +113,7 @@ Two simulation sets:
 | `local_exponent` | $d\ln V_C'/d\ln\bar\phi$ at $\sigma$ (3 for a pure quartic) |
 | `y_taylor`, `y_taylor_err` | $9\lambda_R S_2/\Omega$ with $\lambda_R$ the quartic Taylor coefficient at the origin from the same fit |
 | `used_in_paper` | 0 for the $n_{\max} = 4$ points at $\lambda = 80$ and $120$ ($\lambda = 240$ was also simulated and is not tabulated), whose massless point is prescription dependent because the induced mass of the nonzero modes at the typical field approaches the cutoff; they are excluded from the figures and from every number quoted in the paper, which restricts Set B to $\lambda \le 60$ (Appendix D4). Their chains are in `chains/`. |
-| `m2_crossing`, `m2_crossing_err` | independent estimate of the massless point from a histogram analysis of the unconstrained mass scans (Appendix D3 of the paper), where available; plotted in Fig. massless(b) by `fig_massless.py`. These two columns are provided as numbers only: the histogram analysis is not part of this repository, and `reproduce_tables.py` copies them from the published table instead of recomputing them |
+| `m2_crossing`, `m2_crossing_err` | independent estimate of the massless point from the joint fit of the zero-mode histograms of the mass scans (Appendix D3 of the paper; `fit_histograms.py`, which also writes `data/histogram_crossing.csv` with the selected model and the number of masses and chains per point), at the points where the dense scan exists and the fit passes the calibrated goodness-of-fit test; plotted in Fig. massless(b) |
 | `chi2`, `dof` | of the joint fit at $m_*^2$ |
 | `n_constrained`, `n_unconstrained_files` | number of constrained chains and of unconstrained files pooled into the ensemble at the point |
 | `ess_unconstrained` | effective sample fraction of the unconstrained ensemble after reweighting to $m_*^2$ |
@@ -121,7 +123,7 @@ Two simulation sets:
 
 ## chains/ (Zenodo)
 
-`manifest.csv` lists every file with `kind`, `set`, `n_max`, `lam`, `m2_bare`, `phibar_fixed` (constrained chains), `n_meas`, `seed`, `acceptance`, `exp_negdH` (the HMC identity $\langle e^{-\Delta H}\rangle = 1$; averaged over the measurement trajectories for the constrained chains, and over all trajectories, thermalization included, for the unconstrained ones). Every chain listed passed the health criteria (acceptance $\ge 0.3$, $0.9 < \langle e^{-\Delta H}\rangle < 1.1$); thermalization trajectories are not included. All arrays are per measurement (one HMC trajectory), in order.
+`manifest.csv` lists every file with `kind`, `set`, `n_max`, `lam`, `m2_bare`, `phibar_fixed` (constrained chains), `n_meas`, `seed`, `host` (`laptop`: MacBook Pro M3 Max, macOS; `snellius`: AMD Genoa nodes of the Snellius cluster, Linux — 533 of the mass-scan chains), `acceptance`, `exp_negdH` (the HMC identity $\langle e^{-\Delta H}\rangle = 1$; averaged over the measurement trajectories for the constrained chains, and over all trajectories, thermalization included, for the unconstrained ones). Every chain listed passed the health criteria (acceptance $\ge 0.3$, $0.9 < \langle e^{-\Delta H}\rangle < 1.1$); thermalization trajectories are not included. All arrays are per measurement (one HMC trajectory), in order.
 
 `chains/unconstrained/*.npz` (Set A: `setA_*`; Set B mass scans: `setB_*`, at several bare masses per point; unconstrained chains with the force recorded: `force_*`):
 
@@ -131,6 +133,7 @@ Two simulation sets:
 | `phi2` | $\Omega^{-1}\int_{S^4}\phi^2$, the volume average of $\phi^2$ (all modes). Writing $p$ for `phi2`, the observable conjugate to $m^2$ is $\int\phi^2 = \Omega p$, so reweighting from $m_s^2$ to $m_s^2 + \delta$ uses the weight $e^{-\delta\Omega p/2}$ |
 | `force` | (force chains only) $\Omega^{-1}\,\partial S/\partial\bar\phi$ per configuration |
 | `vol`, `n_max`, `lam4`, `m2`, `seed`, `n_meas`, `acceptance`, `exp_negdH`, `eps`, `n_steps` | metadata ($\Omega$, cutoff, $\lambda$, bare mass, …) |
+| `action`, `shell_series`, `shell_power`, `mode_power`, `shell_index`, `n_therm`, `therm_acceptance`, `zero_mode_acceptance`, `exp_negdH_meas`, `dH_max`, `settings`, `minutes` | (`setA_*` and `setB_*` files, written by `lattice-ds run`, see its `--help`) action per configuration; mean of $c_{nI}^2$ per level $n$ per configuration and averaged; mean of $c_A^2$ per mode and the level of each mode; thermalization length and acceptance; zero-mode heat-bath acceptance; $\langle e^{-\Delta H}\rangle$ over the measurement trajectories; largest $|\Delta H|$; the run settings (JSON); wall-clock minutes. Seeds were derived by `lattice-ds run` from the point and the chain index with the default base seed 260910, except for the 32 chains of 25 000 measurements at the one-loop bare mass, which share their bare mass with 8 000-measurement scan chains and were run with base seed 260911 |
 
 `chains/constrained/*.npz` (fixed-$\bar\phi$ chains; tag `..._m0.15_s2` means $\bar\phi = 0.15$, seed 2; `..._f0.8` means $\bar\phi = 0.8\sigma$):
 

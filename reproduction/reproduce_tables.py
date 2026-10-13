@@ -219,11 +219,13 @@ def do_setb(a):
             rows = pool.map(setb_point, jobs, chunksize=1)
     else:
         rows = [setb_point(j) for j in jobs]
-    # Columns copied from the published table, not recomputed here: the histogram estimate of
-    # the massless point (Appendix D3; an analysis not included in this repository) and the
-    # used_in_paper flag.
+    # The histogram estimate of the massless point comes from fit_histograms.py
+    # (data/histogram_crossing.csv, usable points only); used_in_paper is a flag of the published table.
+    hist = {(int(h["n_max"]), float(h["lam"])): h for h in read_table("histogram_crossing.csv")}
     for r, p in zip(rows, pub):
-        r.update(m2_crossing=p.get("m2_crossing", ""), m2_crossing_err=p.get("m2_crossing_err", ""),
+        h = hist.get((int(p["n_max"]), float(p["lam"])), {})
+        ok = h.get("usable") == "1"
+        r.update(m2_crossing=h["m2_crossing"] if ok else "", m2_crossing_err=h["m2_crossing_err"] if ok else "",
                  used_in_paper=p.get("used_in_paper", ""))
     write(a.out, "setB_points.csv", rows, SETB_COLUMNS)
     compare(pub, rows, [("x", None), ("y_chain", None), ("y", "y_err_stat"), ("y_err_stat", "rel"),
