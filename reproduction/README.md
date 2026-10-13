@@ -20,7 +20,7 @@ chains/manifest.csv  list of the Monte Carlo chains
 figures/             output of the figure scripts
 ```
 
-The Monte Carlo chains (4041 files, 5.8 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); it might take a few days for the record to be available at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download `chains_constrained.zip` and `chains_unconstrained.zip` and unzip them inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
+The Monte Carlo chains (4041 files, 5.8 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); it might take a few days for the record to be available at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download all 20 `chains_*_part*.zip` archives (about 230–300 MB each) and unzip every part inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
 
 ## Reproducing the paper
 
