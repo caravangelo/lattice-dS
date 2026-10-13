@@ -123,8 +123,6 @@ The folder [`reproduction/`](reproduction/) contains the data tables, the analys
 
 The Monte Carlo chains are archived on Zenodo: [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257) (it might take a few days for the record to be available at this DOI). [`reproduction/README.md`](reproduction/README.md) explains how to reproduce the figures, the tables and the chains.
 
-The tables and figures in `reproduction/` are computed from the final data set and may show minor differences from the first preprint (arXiv v1).
-
 ## AI usage statement
 
 This code was developed with the assistance of Claude (Anthropic), using the models Claude Fable 5.1 and Claude Opus 5.5.

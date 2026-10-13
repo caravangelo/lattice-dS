@@ -20,11 +20,7 @@ chains/manifest.csv  list of the Monte Carlo chains
 figures/             output of the figure scripts
 ```
 
-The Monte Carlo chains (4041 files, 5.5 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); it might take a few days for the record to be available at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download `chains_constrained.zip` and `chains_unconstrained.zip` and unzip them inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
-
-## Data-set note
-
-The tables and figures here are computed from the final data set; the first preprint (arXiv v1) used an earlier version of the unconstrained chains, so its numbers differ in small ways, and Fig. 2 there shows two fit windows instead of three. The journal version of the paper will match this data set. `manifest.csv` lists the chains of the final set.
+The Monte Carlo chains (4041 files, 5.8 GB) are archived on Zenodo, [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257); it might take a few days for the record to be available at this DOI. Each file contains, for one chain, the observables measured on every configuration; the field configurations themselves (136 GB) are available on request. Download `chains_constrained.zip` and `chains_unconstrained.zip` and unzip them inside `reproduction/`; this creates `chains/constrained/` and `chains/unconstrained/` next to `chains/manifest.csv`.
 
 ## Reproducing the paper
 
@@ -48,7 +44,7 @@ python reproduction/fit_histograms.py   --chains reproduction/chains      # m2_c
 python reproduction/fig_massless.py     --chains reproduction/chains      # appendix figure
 ```
 
-recompute `data/*.csv` into `recomputed/` and print the largest deviation from the published values, column by column. Set A takes seconds, Set B about two hours of CPU time, the histogram fits a few minutes. Every number, including the bootstrap errors, is a deterministic function of the chains, so the recomputed tables agree with the published ones to the printed digits.
+recompute `data/*.csv` into `recomputed/` and print the largest deviation from the published values, column by column. Set A takes seconds, Set B about two hours of CPU time, the histogram fits a few minutes. Every number, including the bootstrap errors, is a deterministic function of the chains; the recomputed tables are written with the rounding of the published ones and reproduce them to within that rounding (the scripts report how many values are identical once rounded; a different platform may change the last printed digit of a few values).
 
 **3. Chains from scratch.** The `lattice-ds` command (top-level README) writes files in the format of the published chains.
 
@@ -113,7 +109,7 @@ Two simulation sets:
 | `local_exponent` | $d\ln V_C'/d\ln\bar\phi$ at $\sigma$ (3 for a pure quartic) |
 | `y_taylor`, `y_taylor_err` | $9\lambda_R S_2/\Omega$ with $\lambda_R$ the quartic Taylor coefficient at the origin from the same fit |
 | `used_in_paper` | 0 for the $n_{\max} = 4$ points at $\lambda = 80$ and $120$ ($\lambda = 240$ was also simulated and is not tabulated), whose massless point is prescription dependent because the induced mass of the nonzero modes at the typical field approaches the cutoff; they are excluded from the figures and from every number quoted in the paper, which restricts Set B to $\lambda \le 60$ (Appendix D4). Their chains are in `chains/`. |
-| `m2_crossing`, `m2_crossing_err` | independent estimate of the massless point from the joint fit of the zero-mode histograms of the mass scans (Appendix D3 of the paper; `fit_histograms.py`, which also writes `data/histogram_crossing.csv` with the selected model and the number of masses and chains per point), at the points where the dense scan exists and the fit passes the calibrated goodness-of-fit test; plotted in Fig. massless(b) |
+| `m2_crossing`, `m2_crossing_err` | independent estimate of the massless point from the joint fit of the zero-mode histograms of the mass scans (Appendix D3 of the paper; `fit_histograms.py`, which also writes `data/histogram_crossing.csv` with the selected model and the number of masses and chains per point), at the points where the dense scan exists and the fit passes the calibrated goodness-of-fit test; shown in the appendix figure on the massless point (`fig_massless.py`) |
 | `chi2`, `dof` | of the joint fit at $m_*^2$ |
 | `n_constrained`, `n_unconstrained_files` | number of constrained chains and of unconstrained files pooled into the ensemble at the point |
 | `ess_unconstrained` | effective sample fraction of the unconstrained ensemble after reweighting to $m_*^2$ |

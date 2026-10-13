@@ -10,10 +10,16 @@ version: 1.0.0
 date-released: 2026-10-13
 license: MIT
 repository-code: "https://github.com/caravangelo/lattice-dS"
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.23242257
-    description: "Monte Carlo chains and tables of the paper (data set)"
+references:
+  - type: data
+    title: "Monte Carlo chains and tables of 'Lattice Monte Carlo of λφ⁴ on Euclidean de Sitter'"
+    authors:
+      - family-names: Caravano
+        given-names: Angelo
+    year: 2026
+    version: 1.0.0
+    repository: "https://doi.org/10.5281/zenodo.23242257"
+    doi: 10.5281/zenodo.23242257
 preferred-citation:
   type: article
   title: "Lattice Monte Carlo of λφ⁴ on Euclidean de Sitter"

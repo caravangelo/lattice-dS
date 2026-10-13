@@ -14,8 +14,10 @@ published ones are never modified.
 
 What to expect. Every number is a deterministic function of the chains,
 including the bootstrap errors of Set B, whose resampling is seeded. The
-recomputed tables therefore agree with the published ones to the printed
-digits.
+recomputed tables are written with the same rounding as the published ones
+(FORMATS below) and reproduce them to within that rounding; the script
+prints the largest deviation column by column, and how many values are
+identical once rounded.
 
 Set A takes seconds. Set B takes one to ten minutes per point on one core,
 about two hours in total; --jobs runs points in parallel.
@@ -236,6 +238,21 @@ def do_setb(a):
 
 # ============================================================== output
 
+# Rounding of the published tables (data/*.csv), column by column; floats in
+# columns not listed here are written with 10 significant digits.
+FORMATS = {
+    "m2_bare": ".10g", "phibar2": ".6g", "phibar2_err": ".3g", "phibar2_SY": ".6g",
+    "U": ".5f", "U_err": ".5f", "U_SY": ".5f",
+    "x": ".5g", "y": ".5g", "y_err": ".3g", "y_chain": ".5f", "y_err_stat": ".3g", "y_err_window": ".3g",
+    "sigma": ".5f", "m2_star": ".6g", "m2_star_err": ".3g", "local_exponent": ".3f",
+    "y_taylor": ".4g", "y_taylor_err": ".3g", "chi2": ".3g", "ess_unconstrained": ".4g", "m2_star_alt": ".6g",
+}
+
+
+def fmt(col, v):
+    return f"{v:{FORMATS.get(col, '.10g')}}" if isinstance(v, float) else v
+
+
 def write(outdir, name, rows, cols):
     os.makedirs(outdir, exist_ok=True)
     path = os.path.join(outdir, name)
@@ -243,7 +260,7 @@ def write(outdir, name, rows, cols):
         w = csv.writer(fh)
         w.writerow(cols)
         for r in rows:
-            w.writerow([f"{r[c]:.10g}" if isinstance(r[c], float) else r[c] for c in cols])
+            w.writerow([fmt(c, r[c]) for c in cols])
     print(f"wrote {path}")
 
 
@@ -268,7 +285,16 @@ def compare(pub, rows, spec):
                 worst, where = d, (p["n_max"], p["lam"])
         label = {None: "last printed digit/2", "rel": "relative"}.get(unit, f"published {unit}")
         print(f"{col:16s} {worst:14.3g}  {label:20s}{where}")
-    print()
+    same = tot = 0
+    for p, r in zip(pub, rows):
+        for col, _ in spec:
+            if p[col] == "":
+                continue
+            tot += 1
+            same += str(fmt(col, r[col])) == p[col] or float(fmt(col, r[col])) == float(p[col])
+    print(f"\n{same} of {tot} values identical to the published table after rounding to its format"
+          + ("" if same == tot else "; inspect the differing values above (a different platform can change the"
+             " last printed digit of a few values, anything larger needs an explanation)") + "\n")
 
 
 def main():
