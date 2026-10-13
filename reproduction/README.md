@@ -2,7 +2,7 @@
 
 Data tables, analysis and figure scripts, and chain format for
 
-> A. Caravano, *Lattice Monte Carlo of $\lambda\phi^4$ on Euclidean de Sitter*, arXiv:XXXX.XXXXX (2026).
+> A. Caravano, *Lattice Monte Carlo of $\lambda\phi^4$ on Euclidean de Sitter*, arXiv:2610.12547 (2026).
 
 Data are released under CC-BY-4.0 (`LICENSE-DATA` at the top of the repository). If you use them, please cite the paper.
 

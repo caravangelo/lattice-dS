@@ -7,8 +7,13 @@ authors:
     given-names: Angelo
     affiliation: "Gravitation Astroparticle Physics Amsterdam (GRAPPA), University of Amsterdam"
 version: 1.0.0
+date-released: 2026-10-13
 license: MIT
 repository-code: "https://github.com/caravangelo/lattice-dS"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.23242257
+    description: "Monte Carlo chains and tables of the paper (data set)"
 preferred-citation:
   type: article
   title: "Lattice Monte Carlo of λφ⁴ on Euclidean de Sitter"
@@ -17,6 +22,8 @@ preferred-citation:
       given-names: Angelo
   journal: "arXiv"
   year: 2026
+  url: "https://arxiv.org/abs/2610.12547"
+  doi: 10.48550/arXiv.2610.12547
   identifiers:
     - type: other
-      value: "arXiv:XXXX.XXXXX"
+      value: "arXiv:2610.12547"

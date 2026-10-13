@@ -11,7 +11,7 @@
 
 lattice-dS is a Python code for lattice Monte Carlo simulations of quantum field theory on Euclidean de Sitter space. It samples the Euclidean path integral on the four-sphere $S^4$, the Euclidean continuation of de Sitter, with the methods of lattice QCD.
 
-This first version focuses on a real scalar field with a $\lambda\phi^4$ interaction; the method and the results are described in [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX). The animation above follows one Monte Carlo chain; click it for an [interactive version](https://caravangelo.github.io/lattice-dS/).
+This first version focuses on a real scalar field with a $\lambda\phi^4$ interaction; the method and the results are described in [arXiv:2610.12547](https://arxiv.org/abs/2610.12547). The animation above follows one Monte Carlo chain; click it for an [interactive version](https://caravangelo.github.io/lattice-dS/).
 
 ## Method
 
@@ -107,7 +107,7 @@ src/lattice_ds/   the package
     perturbation.py   loop sums, one-loop tuning, Starobinsky–Yokoyama reference values
     stats.py          autocorrelation, jackknife, bootstrap
     cli/              the lattice-ds command
-reproduction/     data, analysis and figure scripts of arXiv:XXXX.XXXXX
+reproduction/     data, analysis and figure scripts of arXiv:2610.12547
 animations/       the animation page (published with GitHub Pages) and the README banner
 examples/         quickstart
 tests/            pytest suite
@@ -119,7 +119,7 @@ Each module starts with a description of the method and its conventions.
 
 The folder [`reproduction/`](reproduction/) contains the data tables, the analysis and the figure scripts of
 
-> A. Caravano, *Lattice Monte Carlo of $\lambda\phi^4$ on Euclidean de Sitter*, [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX) (2026).
+> A. Caravano, *Lattice Monte Carlo of $\lambda\phi^4$ on Euclidean de Sitter*, [arXiv:2610.12547](https://arxiv.org/abs/2610.12547) (2026).
 
 The Monte Carlo chains are archived on Zenodo: [doi:10.5281/zenodo.23242257](https://doi.org/10.5281/zenodo.23242257) (it might take a few days for the record to be available at this DOI). [`reproduction/README.md`](reproduction/README.md) explains how to reproduce the figures, the tables and the chains.
 
@@ -131,7 +131,7 @@ This code was developed with the assistance of Claude (Anthropic), using the mod
 
 ## Citing
 
-If you use this code, please cite arXiv:XXXX.XXXXX; if you use published data, also cite the paper they come from. `CITATION.cff` has the reference in machine-readable form.
+If you use this code or the data, please cite [arXiv:2610.12547](https://arxiv.org/abs/2610.12547). `CITATION.cff` has the reference in machine-readable form.
 
 ## Licence
 
